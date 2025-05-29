@@ -8,10 +8,14 @@
     input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
     .order { margin: 1rem 0; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; }
     .order.complete { background: #e0ffe0; }
+    #connectWallet { background: #007bff; color: white; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
   <h1>✨ Factory Orders</h1>
+
+  <button id="connectWallet" onclick="connect()">🔗 Connect Wallet</button>
+  <div id="walletStatus"></div>
 
   <h3>Create a New Order</h3>
   <input id="description" placeholder="Description: e.g. Build 1000 doors" />
@@ -27,84 +31,34 @@
   <script>
     const contractAddress = "0x9eff3de71d7004ad9aba66bf8abebd0aaf93b651";
     const abi = [
-      {
-        "inputs": [
-          { "internalType": "uint256", "name": "_id", "type": "uint256" }
-        ],
-        "name": "completeOrder",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
+      { "inputs": [{ "internalType": "uint256", "name": "_id", "type": "uint256" }], "name": "completeOrder", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "inputs": [
           { "internalType": "string", "name": "_description", "type": "string" },
           { "internalType": "string", "name": "_factoryName", "type": "string" }
-        ],
-        "name": "createOrder",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "anonymous": false,
-        "inputs": [
-          { "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" }
-        ],
-        "name": "OrderCompleted",
-        "type": "event"
-      },
-      {
-        "anonymous": false,
-        "inputs": [
+        ], "name": "createOrder", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+      { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" } ], "name": "OrderCompleted", "type": "event" },
+      { "anonymous": false, "inputs": [
           { "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" },
           { "indexed": false, "internalType": "string", "name": "description", "type": "string" },
           { "indexed": false, "internalType": "string", "name": "factoryName", "type": "string" }
-        ],
-        "name": "OrderCreated",
-        "type": "event"
-      },
-      {
-        "inputs": [
-          { "internalType": "uint256", "name": "_id", "type": "uint256" }
-        ],
-        "name": "getOrder",
-        "outputs": [
+        ], "name": "OrderCreated", "type": "event" },
+      { "inputs": [ { "internalType": "uint256", "name": "_id", "type": "uint256" } ], "name": "getOrder", "outputs": [
           { "internalType": "uint256", "name": "", "type": "uint256" },
           { "internalType": "string", "name": "", "type": "string" },
           { "internalType": "string", "name": "", "type": "string" },
           { "internalType": "bool", "name": "", "type": "bool" },
           { "internalType": "uint256", "name": "", "type": "uint256" },
           { "internalType": "address", "name": "", "type": "address" }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "orderCount",
-        "outputs": [
-          { "internalType": "uint256", "name": "", "type": "uint256" }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          { "internalType": "uint256", "name": "", "type": "uint256" }
-        ],
-        "name": "orders",
-        "outputs": [
+        ], "stateMutability": "view", "type": "function" },
+      { "inputs": [], "name": "orderCount", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
+      { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "orders", "outputs": [
           { "internalType": "uint256", "name": "id", "type": "uint256" },
           { "internalType": "string", "name": "description", "type": "string" },
           { "internalType": "string", "name": "factoryName", "type": "string" },
           { "internalType": "bool", "name": "completed", "type": "bool" },
           { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
           { "internalType": "address", "name": "createdBy", "type": "address" }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      }
+        ], "stateMutability": "view", "type": "function" }
     ];
 
     let provider;
@@ -113,12 +67,19 @@
 
     async function connect() {
       if (window.ethereum) {
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(contractAddress, abi, signer);
+        try {
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = provider.getSigner();
+          contract = new ethers.Contract(contractAddress, abi, signer);
+          const address = await signer.getAddress();
+          document.getElementById("walletStatus").innerText = `Connected: ${address}`;
+        } catch (err) {
+          console.error("Connection rejected", err);
+          alert("MetaMask connection rejected");
+        }
       } else {
-        alert("MetaMask not detected");
+        alert("MetaMask not detected. Please install MetaMask and refresh the page.");
       }
     }
 
@@ -165,8 +126,6 @@
         alert("Could not complete order.");
       }
     }
-
-    connect();
   </script>
 </body>
 </html>
