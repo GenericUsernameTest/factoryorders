@@ -1,103 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Factory Orders (Blockchain UI)</title>
+  <title>Factory Workflow (3-Stage Blockchain UI)</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <!-- kjua QR code library (CSP safe) -->
-  <script src="https://cdn.jsdelivr.net/npm/kjua@0.1.1/kjua.min.js"></script>
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
-    input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
+    input, button, select { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
     .order { margin: 1rem 0; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; }
-    .order.complete { background: #e0ffe0; }
     #connectWallet { background: #007bff; color: white; font-weight: bold; cursor: pointer; }
-    #qrCodeContainer { margin-top: 2rem; text-align: center; }
   </style>
 </head>
 <body>
-  <h1>✨ Factory Orders</h1>
+  <h1>🏭 Factory Workflow</h1>
 
   <button id="connectWallet" onclick="connect()" disabled>🔗 Connect Wallet</button>
   <div id="walletStatus"></div>
 
-  <h3>Create a New Order</h3>
-  <input id="description" placeholder="Description: e.g. Build 1000 doors" />
-  <input id="factoryName" placeholder="Factory Name: e.g. GreenTech" />
+  <h3>Create New Order</h3>
+  <input id="description" placeholder="Description (e.g. Build 100 doors)" />
+  <input id="factoryName" placeholder="Factory Name" />
   <button onclick="createOrder()">Create Order</button>
 
-  <h3>Get Order By ID</h3>
+  <h3>Fetch Order by ID</h3>
   <input id="orderId" placeholder="Enter Order ID" />
-  <button onclick="getOrder()">Fetch Order</button>
+  <button onclick="getOrder()">Fetch</button>
 
   <div id="orderDetails"></div>
 
-  <div id="qrCodeContainer"></div>
-
   <script>
-    const contractAddress = "0x9eff3de71d7004ad9aba66bf8abebd0aaf93b651";
+    const contractAddress = "YOUR_DEPLOYED_CONTRACT_ADDRESS_HERE";
     const abi = [
-      { "inputs": [{ "internalType": "uint256", "name": "_id", "type": "uint256" }], "name": "completeOrder", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
       { "inputs": [
           { "internalType": "string", "name": "_description", "type": "string" },
           { "internalType": "string", "name": "_factoryName", "type": "string" }
         ], "name": "createOrder", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-      { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" } ], "name": "OrderCompleted", "type": "event" },
-      { "anonymous": false, "inputs": [
-          { "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" },
-          { "indexed": false, "internalType": "string", "name": "description", "type": "string" },
-          { "indexed": false, "internalType": "string", "name": "factoryName", "type": "string" }
-        ], "name": "OrderCreated", "type": "event" },
+      { "inputs": [
+          { "internalType": "uint256", "name": "_id", "type": "uint256" },
+          { "internalType": "uint8", "name": "_newStatus", "type": "uint8" }
+        ], "name": "updateStatus", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
       { "inputs": [ { "internalType": "uint256", "name": "_id", "type": "uint256" } ], "name": "getOrder", "outputs": [
           { "internalType": "uint256", "name": "", "type": "uint256" },
           { "internalType": "string", "name": "", "type": "string" },
           { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "bool", "name": "", "type": "bool" },
+          { "internalType": "uint8", "name": "", "type": "uint8" },
           { "internalType": "uint256", "name": "", "type": "uint256" },
           { "internalType": "address", "name": "", "type": "address" }
-        ], "stateMutability": "view", "type": "function" },
-      { "inputs": [], "name": "orderCount", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" },
-      { "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "orders", "outputs": [
-          { "internalType": "uint256", "name": "id", "type": "uint256" },
-          { "internalType": "string", "name": "description", "type": "string" },
-          { "internalType": "string", "name": "factoryName", "type": "string" },
-          { "internalType": "bool", "name": "completed", "type": "bool" },
-          { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
-          { "internalType": "address", "name": "createdBy", "type": "address" }
         ], "stateMutability": "view", "type": "function" }
     ];
 
-    let provider;
-    let signer;
-    let contract;
+    let provider, signer, contract;
 
     async function connect() {
       if (window.ethereum) {
-        try {
-          provider = new ethers.providers.Web3Provider(window.ethereum);
-          await provider.send("eth_requestAccounts", []);
-          signer = provider.getSigner();
-          contract = new ethers.Contract(contractAddress, abi, signer);
-          const address = await signer.getAddress();
-          document.getElementById("walletStatus").innerText = `✅ Connected: ${address}`;
-        } catch (err) {
-          console.error("Connection rejected", err);
-          alert("MetaMask connection rejected");
-        }
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, abi, signer);
+        const address = await signer.getAddress();
+        document.getElementById("walletStatus").innerText = `✅ Connected: ${address}`;
       } else {
-        alert("MetaMask not detected. Please install MetaMask and refresh the page.");
+        alert("Please install MetaMask.");
       }
     }
 
     async function createOrder() {
       const desc = document.getElementById("description").value;
       const factory = document.getElementById("factoryName").value;
+      if (!desc || !factory) {
+        alert("Please fill out both fields.");
+        return;
+      }
       try {
         const tx = await contract.createOrder(desc, factory);
         await tx.wait();
         alert("✅ Order created!");
       } catch (err) {
         console.error(err);
-        alert("Failed to create order.");
+        alert("Error creating order.");
       }
     }
 
@@ -105,63 +84,54 @@
       const id = document.getElementById("orderId").value;
       try {
         const result = await contract.getOrder(id);
-        const html = `<div class="order ${result[3] ? 'complete' : ''}">
-          <strong>Order #${result[0]}</strong><br/>
-          Description: ${result[1]}<br/>
-          Factory: ${result[2]}<br/>
-          Completed: ${result[3]}<br/>
-          Timestamp: ${new Date(result[4] * 1000).toLocaleString()}<br/>
-          Created By: ${result[5]}<br/>
-          <button onclick="completeOrder(${result[0]})">Mark Complete</button>
-        </div>`;
-        document.getElementById("orderDetails").innerHTML = html;
-        clearQRCode();
+        const statusNames = ["Ordered", "Picked Up", "Installed"];
+        const status = result[3];
+
+        let nextStepHtml = "";
+        if (status < 2) {
+          nextStepHtml = `
+            <select id="newStatusSelect">
+              <option value="${status + 1}">Advance to: ${statusNames[status + 1]}</option>
+            </select>
+            <button onclick="advanceStatus(${id})">Update Status</button>
+          `;
+        }
+
+        document.getElementById("orderDetails").innerHTML = `
+          <div class="order">
+            <strong>Order #${result[0]}</strong><br/>
+            Description: ${result[1]}<br/>
+            Factory: ${result[2]}<br/>
+            Current Status: <strong>${statusNames[status]}</strong><br/>
+            Created By: ${result[5]}<br/>
+            Timestamp: ${new Date(result[4] * 1000).toLocaleString()}<br/>
+            ${nextStepHtml}
+          </div>
+        `;
       } catch (err) {
         console.error(err);
         alert("Order not found.");
       }
     }
 
-    async function completeOrder(id) {
+    async function advanceStatus(orderId) {
+      const newStatus = document.getElementById("newStatusSelect").value;
       try {
-        const tx = await contract.completeOrder(id);
+        const tx = await contract.updateStatus(orderId, newStatus);
         await tx.wait();
-        alert("✅ Order marked as completed.");
-        generateQRCode(id);
+        alert("✅ Status updated.");
+        getOrder(); // Refresh
       } catch (err) {
         console.error(err);
-        alert("Could not complete order.");
+        alert("Failed to update status.");
       }
-    }
-
-    function generateQRCode(orderId) {
-      clearQRCode();
-      const container = document.getElementById("qrCodeContainer");
-      const qrData = `${window.location.origin}${window.location.pathname}?orderId=${orderId}`;
-      const qr = kjua({
-        text: qrData,
-        size: 200,
-        fill: '#000000',
-        back: '#ffffff',
-        rounded: 20,
-        quiet: 2,
-      });
-      container.appendChild(qr);
-      const label = document.createElement("p");
-      label.innerText = `QR Code for Order #${orderId}`;
-      container.appendChild(label);
-    }
-
-    function clearQRCode() {
-      const container = document.getElementById("qrCodeContainer");
-      container.innerHTML = "";
     }
 
     window.addEventListener('load', () => {
       if (window.ethereum) {
-        document.getElementById('connectWallet').disabled = false;
+        document.getElementById("connectWallet").disabled = false;
       } else {
-        document.getElementById('walletStatus').innerText = '⚠️ MetaMask not found. Please install MetaMask.';
+        document.getElementById("walletStatus").innerText = '⚠️ MetaMask not detected.';
       }
     });
   </script>
