@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Factory Orders (Blockchain UI)</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
+    input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
+    .order { margin: 1rem 0; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+    .order.complete { background: #e0ffe0; }
+  </style>
+</head>
+<body>
+  <h1>✨ Factory Orders</h1>
+
+  <h3>Create a New Order</h3>
+  <input id="description" placeholder="Description: e.g. Build 1000 doors" />
+  <input id="factoryName" placeholder="Factory Name: e.g. GreenTech" />
+  <button onclick="createOrder()">Create Order</button>
+
+  <h3>Get Order By ID</h3>
+  <input id="orderId" placeholder="Enter Order ID" />
+  <button onclick="getOrder()">Fetch Order</button>
+
+  <div id="orderDetails"></div>
+
+  <script>
+    const contractAddress = "0x9eff3de71d7004ad9aba66bf8abebd0aaf93b651";
+    const abi = [
+      {
+        "inputs": [
+          { "internalType": "uint256", "name": "_id", "type": "uint256" }
+        ],
+        "name": "completeOrder",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "string", "name": "_description", "type": "string" },
+          { "internalType": "string", "name": "_factoryName", "type": "string" }
+        ],
+        "name": "createOrder",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          { "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" }
+        ],
+        "name": "OrderCompleted",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          { "indexed": false, "internalType": "uint256", "name": "id", "type": "uint256" },
+          { "indexed": false, "internalType": "string", "name": "description", "type": "string" },
+          { "indexed": false, "internalType": "string", "name": "factoryName", "type": "string" }
+        ],
+        "name": "OrderCreated",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          { "internalType": "uint256", "name": "_id", "type": "uint256" }
+        ],
+        "name": "getOrder",
+        "outputs": [
+          { "internalType": "uint256", "name": "", "type": "uint256" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "bool", "name": "", "type": "bool" },
+          { "internalType": "uint256", "name": "", "type": "uint256" },
+          { "internalType": "address", "name": "", "type": "address" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "orderCount",
+        "outputs": [
+          { "internalType": "uint256", "name": "", "type": "uint256" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "uint256", "name": "", "type": "uint256" }
+        ],
+        "name": "orders",
+        "outputs": [
+          { "internalType": "uint256", "name": "id", "type": "uint256" },
+          { "internalType": "string", "name": "description", "type": "string" },
+          { "internalType": "string", "name": "factoryName", "type": "string" },
+          { "internalType": "bool", "name": "completed", "type": "bool" },
+          { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+          { "internalType": "address", "name": "createdBy", "type": "address" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
+
+    let provider;
+    let signer;
+    let contract;
+
+    async function connect() {
+      if (window.ethereum) {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, abi, signer);
+      } else {
+        alert("MetaMask not detected");
+      }
+    }
+
+    async function createOrder() {
+      const desc = document.getElementById("description").value;
+      const factory = document.getElementById("factoryName").value;
+      try {
+        const tx = await contract.createOrder(desc, factory);
+        await tx.wait();
+        alert("Order created!");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to create order.");
+      }
+    }
+
+    async function getOrder() {
+      const id = document.getElementById("orderId").value;
+      try {
+        const result = await contract.getOrder(id);
+        const html = `<div class="order ${result[3] ? 'complete' : ''}">
+          <strong>Order #${result[0]}</strong><br/>
+          Description: ${result[1]}<br/>
+          Factory: ${result[2]}<br/>
+          Completed: ${result[3]}<br/>
+          Timestamp: ${new Date(result[4] * 1000).toLocaleString()}<br/>
+          Created By: ${result[5]}<br/>
+          <button onclick="completeOrder(${result[0]})">Mark Complete</button>
+        </div>`;
+        document.getElementById("orderDetails").innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        alert("Order not found.");
+      }
+    }
+
+    async function completeOrder(id) {
+      try {
+        const tx = await contract.completeOrder(id);
+        await tx.wait();
+        alert("Order marked as completed.");
+      } catch (err) {
+        console.error(err);
+        alert("Could not complete order.");
+      }
+    }
+
+    connect();
+  </script>
+</body>
+</html>
