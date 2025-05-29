@@ -28,25 +28,45 @@
   <div id="orderDetails"></div>
 
   <script>
-    const contractAddress = "YOUR_DEPLOYED_CONTRACT_ADDRESS_HERE";
-    const abi = [
-      { "inputs": [
-          { "internalType": "string", "name": "_description", "type": "string" },
-          { "internalType": "string", "name": "_factoryName", "type": "string" }
-        ], "name": "createOrder", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-      { "inputs": [
-          { "internalType": "uint256", "name": "_id", "type": "uint256" },
-          { "internalType": "uint8", "name": "_newStatus", "type": "uint8" }
-        ], "name": "updateStatus", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-      { "inputs": [ { "internalType": "uint256", "name": "_id", "type": "uint256" } ], "name": "getOrder", "outputs": [
-          { "internalType": "uint256", "name": "", "type": "uint256" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "uint8", "name": "", "type": "uint8" },
-          { "internalType": "uint256", "name": "", "type": "uint256" },
-          { "internalType": "address", "name": "", "type": "address" }
-        ], "stateMutability": "view", "type": "function" }
-    ];
+const contractAddress = "0x9ef054e37ca49af0e3bb04de6db19d59a955f9b5";
+  const abi = [
+  {
+    "inputs": [
+      { "internalType": "string", "name": "_description", "type": "string" },
+      { "internalType": "string", "name": "_factoryName", "type": "string" }
+    ],
+    "name": "createOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_id", "type": "uint256" },
+      { "internalType": "uint8", "name": "_newStatus", "type": "uint8" }
+    ],
+    "name": "updateStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_id", "type": "uint256" }
+    ],
+    "name": "getOrder",
+    "outputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "string", "name": "", "type": "string" },
+      { "internalType": "string", "name": "", "type": "string" },
+      { "internalType": "uint8", "name": "", "type": "uint8" },
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
 
     let provider, signer, contract;
 
