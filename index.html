@@ -19,81 +19,98 @@
   <h3>Create New Order</h3>
   <input id="description" placeholder="Description (e.g. Build 100 doors)" />
   <input id="factoryName" placeholder="Factory Name" />
-  <button onclick="createOrder()">Create Order</button>
+  <button id="createOrderBtn" onclick="createOrder()" disabled>Create Order</button>
 
   <h3>Fetch Order by ID</h3>
-  <input id="orderId" placeholder="Enter Order ID" />
+  <input id="orderId" type="number" placeholder="Enter Order ID" />
   <button onclick="getOrder()">Fetch</button>
 
   <div id="orderDetails"></div>
 
   <script>
-const contractAddress = "0x9ef054e37ca49af0e3bb04de6db19d59a955f9b5";
-  const abi = [
-  {
-    "inputs": [
-      { "internalType": "string", "name": "_description", "type": "string" },
-      { "internalType": "string", "name": "_factoryName", "type": "string" }
-    ],
-    "name": "createOrder",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "_id", "type": "uint256" },
-      { "internalType": "uint8", "name": "_newStatus", "type": "uint8" }
-    ],
-    "name": "updateStatus",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "_id", "type": "uint256" }
-    ],
-    "name": "getOrder",
-    "outputs": [
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "string", "name": "", "type": "string" },
-      { "internalType": "string", "name": "", "type": "string" },
-      { "internalType": "uint8", "name": "", "type": "uint8" },
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "address", "name": "", "type": "address" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+    const contractAddress = "0x9ef054e37ca49af0e3bb04de6db19d59a955f9b5";
+
+    const abi = [
+      {
+        "inputs": [
+          { "internalType": "string", "name": "_description", "type": "string" },
+          { "internalType": "string", "name": "_factoryName", "type": "string" }
+        ],
+        "name": "createOrder",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "uint256", "name": "_id", "type": "uint256" },
+          { "internalType": "uint8", "name": "_newStatus", "type": "uint8" }
+        ],
+        "name": "updateStatus",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "uint256", "name": "_id", "type": "uint256" }
+        ],
+        "name": "getOrder",
+        "outputs": [
+          { "internalType": "uint256", "name": "", "type": "uint256" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "uint8", "name": "", "type": "uint8" },
+          { "internalType": "uint256", "name": "", "type": "uint256" },
+          { "internalType": "address", "name": "", "type": "address" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
 
     let provider, signer, contract;
 
     async function connect() {
       if (window.ethereum) {
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(contractAddress, abi, signer);
-        const accounts = await provider.listAccounts();
-        document.getElementById("walletStatus").innerText = `✅ Connected: ${accounts[0]}`;
+        try {
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = provider.getSigner();
+          contract = new ethers.Contract(contractAddress, abi, signer);
+          const accounts = await provider.listAccounts();
+          document.getElementById("walletStatus").innerText = `✅ Connected: ${accounts[0]}`;
+          document.getElementById("connectWallet").disabled = true;
+          document.getElementById("createOrderBtn").disabled = false;
+        } catch (err) {
+          console.error(err);
+          alert("Failed to connect wallet.");
+        }
       } else {
         alert("Please install MetaMask.");
       }
     }
 
     async function createOrder() {
+      if (!contract) {
+        alert("Please connect your wallet first.");
+        return;
+      }
+
       const desc = document.getElementById("description").value;
       const factory = document.getElementById("factoryName").value;
+
       if (!desc || !factory) {
         alert("Please fill out both fields.");
         return;
       }
+
       try {
         const tx = await contract.createOrder(desc, factory);
         await tx.wait();
         alert("✅ Order created!");
+        document.getElementById("description").value = "";
+        document.getElementById("factoryName").value = "";
       } catch (err) {
         console.error(err);
         alert("Error creating order.");
@@ -140,7 +157,7 @@ const contractAddress = "0x9ef054e37ca49af0e3bb04de6db19d59a955f9b5";
         const tx = await contract.updateStatus(orderId, newStatus);
         await tx.wait();
         alert("✅ Status updated.");
-        getOrder(); // Refresh
+        getOrder(); // Refresh UI
       } catch (err) {
         console.error(err);
         alert("Failed to update status.");
