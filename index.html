@@ -76,8 +76,8 @@ const contractAddress = "0x9ef054e37ca49af0e3bb04de6db19d59a955f9b5";
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
         contract = new ethers.Contract(contractAddress, abi, signer);
-        const address = await signer.getAddress();
-        document.getElementById("walletStatus").innerText = `✅ Connected: ${address}`;
+        const accounts = await provider.listAccounts();
+        document.getElementById("walletStatus").innerText = `✅ Connected: ${accounts[0]}`;
       } else {
         alert("Please install MetaMask.");
       }
