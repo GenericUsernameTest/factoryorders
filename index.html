@@ -2,6 +2,8 @@
 <html>
 <head>
   <title>Factory Orders (Blockchain UI)</title>
+  <!-- Updated ethers.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
     input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
@@ -27,10 +29,6 @@
 
   <div id="orderDetails"></div>
 
-  <!-- ✅ Load ethers.js first -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-
-  <!-- ✅ Then your custom code -->
   <script>
     const contractAddress = "0x9eff3de71d7004ad9aba66bf8abebd0aaf93b651";
     const abi = [
