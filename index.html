@@ -14,7 +14,7 @@
 <body>
   <h1>✨ Factory Orders</h1>
 
-  <button id="connectWallet" onclick="connect()">🔗 Connect Wallet</button>
+  <button id="connectWallet" onclick="connect()" disabled>🔗 Connect Wallet</button>
   <div id="walletStatus"></div>
 
   <h3>Create a New Order</h3>
@@ -73,7 +73,7 @@
           signer = provider.getSigner();
           contract = new ethers.Contract(contractAddress, abi, signer);
           const address = await signer.getAddress();
-          document.getElementById("walletStatus").innerText = `Connected: ${address}`;
+          document.getElementById("walletStatus").innerText = `✅ Connected: ${address}`;
         } catch (err) {
           console.error("Connection rejected", err);
           alert("MetaMask connection rejected");
@@ -89,7 +89,7 @@
       try {
         const tx = await contract.createOrder(desc, factory);
         await tx.wait();
-        alert("Order created!");
+        alert("✅ Order created!");
       } catch (err) {
         console.error(err);
         alert("Failed to create order.");
@@ -120,12 +120,21 @@
       try {
         const tx = await contract.completeOrder(id);
         await tx.wait();
-        alert("Order marked as completed.");
+        alert("✅ Order marked as completed.");
       } catch (err) {
         console.error(err);
         alert("Could not complete order.");
       }
     }
+
+    // Enable wallet button when page fully loads and MetaMask is detected
+    window.addEventListener('load', () => {
+      if (window.ethereum) {
+        document.getElementById('connectWallet').disabled = false;
+      } else {
+        document.getElementById('walletStatus').innerText = '⚠️ MetaMask not found. Please install it.';
+      }
+    });
   </script>
 </body>
 </html>
