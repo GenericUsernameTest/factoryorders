@@ -2,8 +2,10 @@
 <html>
 <head>
   <title>Factory Orders (Blockchain UI)</title>
+  <!-- Allow unsafe-eval for QR code generation in dev/testing ONLY -->
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https://cdnjs.cloudflare.com;">
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
     input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
@@ -126,7 +128,6 @@
         const tx = await contract.completeOrder(id);
         await tx.wait();
         alert("✅ Order marked as completed.");
-        // Generate QR code here:
         generateQRCode(id);
       } catch (err) {
         console.error(err);
@@ -137,7 +138,6 @@
     function generateQRCode(orderId) {
       clearQRCode();
       const container = document.getElementById("qrCodeContainer");
-      // Customize URL as needed - here it points to your UI page with the order id query param
       const qrData = `${window.location.origin}${window.location.pathname}?orderId=${orderId}`;
       new QRCode(container, {
         text: qrData,
@@ -147,7 +147,6 @@
         colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
       });
-      // Optionally, add label or instructions
       const label = document.createElement("p");
       label.innerText = `QR Code for Order #${orderId}`;
       container.appendChild(label);
@@ -158,7 +157,6 @@
       container.innerHTML = "";
     }
 
-    // Enable wallet button when page fully loads and MetaMask is detected
     window.addEventListener('load', () => {
       if (window.ethereum) {
         document.getElementById('connectWallet').disabled = false;
